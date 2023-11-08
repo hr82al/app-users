@@ -2,8 +2,10 @@
 const express = require('express');
 const { prisma } = require('./prisma-db');
 
-const HISTORY_HOST = "http://localhost:3001"
+const TMP_HISTORY_HOST = process.env.HISTORY_HOST ?? "localhost";
 
+const HISTORY_HOST = `http://${TMP_HISTORY_HOST}:3001`
+console.log(HISTORY_HOST);
 const app = express();
 
 app.use(express.json());
@@ -29,11 +31,11 @@ async function saveHistory(userId, action, newValue) {
 app.post("/api/v1/users", async (req, res) => {
   try {
     if ("name" in req.body) {
-      await saveHistory(+req.body.id, "CREATE", req.body.name);
       const result = await prisma.user.create({ data: {
         id: req.body.id,
         name: req.body.name,
       }});
+      await saveHistory(+result.id, "CREATE", result.name);
       res.json(result);
     } else {
       res.status(500).send(
@@ -61,7 +63,6 @@ app.get("/api/v1/users", async (req, res) => {
 app.put("/api/v1/users", async (req, res) => {
   try {
     if ("id" in req.body && "name" in req.body) {
-      await saveHistory(+req.body.id, "CREATE", req.body.name);
       const result = await prisma.user.update({
         where: {
           id: req.body.id,
@@ -70,6 +71,7 @@ app.put("/api/v1/users", async (req, res) => {
           name: req.body.name,
         }
       });
+      await saveHistory(+result.id, "UPDATE", result.name);
       res.json(result);
     } else {
       res.status(500).send(

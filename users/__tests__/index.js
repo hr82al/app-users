@@ -11,25 +11,33 @@ test("Get users", async () => {
   expect(response.statusCode).toBe(200);
 });
 
-test("Create user", async () => {
-  const response = await request(app)
+async function createUser(user) {
+  return await request(app)
     .post(USERS_URL)
-    .send({ name: "John"})
-    .set('Accept', 'application/json');
-  expect(response.status).toEqual(200);
-  expect(response.body.name).toEqual("John");
-})
+    .send({ name: user })
+    .set("Accept", "application/json");
+}
+
+test("Create users", async () => {
+  console.log("Creating users: John, Tomas, Jim");
+  const USERS = ["John", "Tomas", "Jim"]
+  USERS.forEach(async (user) => {
+    const response = await createUser(user);
+    expect(response.status).toEqual(200);
+    expect(response.body.name).toEqual(user);
+  });
+});
 
 test("Change user", async () => {
   const newUserResponse = await request(app)
     .post(USERS_URL)
     .send({ name: "John"})
-    .set('Accept', 'application/json')
+    .set("Accept", "application/json")
   const id = newUserResponse.body.id;
   const response = await request(app)
     .put(USERS_URL)
     .send({ id: id, name: "Joe" })
-    .set('Content-Type', 'application/json')
+    .set("Content-Type", "application/json");
   expect(response.status).toEqual(200);
   expect(response.body.name).toEqual("Joe");
 });
